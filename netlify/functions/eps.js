@@ -5,7 +5,7 @@ exports.handler = async function(event, context) {
     const prompt = body.prompt;
     const apiKey = process.env.OPENAI_API_KEY;
 
-    const response = await fetch('https://api.openai.com/v1/engines/davinci-codex/completions', {
+    const response = await fetch('https://api.openai.com/v1/engines/' + model + '/completions', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
