@@ -4,7 +4,7 @@ exports.handler = async function(event, context) {
     try {
         const body = JSON.parse(event.body);
         const prompt = body.prompt;
-        const model = 'gpt-4o'; // Especifique o modelo que você está usando
+        const model = 'text-davinci-003'; // Certifique-se de usar o modelo correto
         const apiKey = process.env.OPENAI_API_KEY;
 
         if (!apiKey) {
@@ -14,7 +14,7 @@ exports.handler = async function(event, context) {
             };
         }
 
-        const response = await fetch('https://api.openai.com/v1/engines/' + model + '/completions', {
+        const response = await fetch(`https://api.openai.com/v1/engines/${model}/completions`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
