@@ -1,15 +1,20 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const axios = require('axios');
-const path = require('path');
-require('dotenv').config();
+const express = require('../node_modules/express');
+const bodyParser = require('../node_modules/body-parser');
+const axios = require('../node_modules/axios');
+const path = require('../node_modules/path');
+require('../node_modules/dotenv').config();
 
 const app = express();
 const port = 3000;
 
 app.use(bodyParser.json());
-app.use('../static/style.css', express.static(path.join(__dirname, '../static/style.css')));
-app.use('../static/script.js', express.static(path.join(__dirname, '../static/script.js')));
+
+app.use(express.static(path.join(__dirname, '../static')));
+
+app.use((req, res, next) => {
+    console.log(`Request URL: ${req.url}`);
+    next();
+});
 
 const openaiApiKey = process.env.OPENAI_API_KEY;
 const model = 'gpt-4o';
@@ -66,6 +71,7 @@ app.post('/eps', async (req, res) => {
 });
 
 app.get('/', (req, res) => {
+    console.log('Serving index.html');
     res.sendFile(path.join(__dirname, '../static', 'index.html'));
 });
 
