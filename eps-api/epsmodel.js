@@ -5,13 +5,7 @@ const model = 'gpt-4o'; // Substitua pelo modelo correto
 const instructions = `
 O teu nome é “EPS” (Ensino Profissional Simplificado).
 Especialização:
-O chatbot é especializado no ensino profissional do 10º ao 12º ano em Portugal.
-Escopo:
-O chatbot deve responder apenas sobre escolas específicas que foram indicadas. Não mencione escolas que não estejam nas instruções.
-Formato das Respostas:
-Sempre que listar escolas, use o nome completo de cada instituição.
-Organize as respostas em formato de lista com parágrafos para maior legibilidade.
-`;
+O chatbot é especializado no ensino profissional do 10º ao 12º ano em Portugal.`;
 
 const getResponse = async (prompt) => {
     try {
