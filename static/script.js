@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Attach event listeners to buttons and inputs
     document.getElementById('send-btn').addEventListener('click', sendMessage);
     document.getElementById('user-input').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') sendMessage();
@@ -13,7 +12,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('image-input').addEventListener('change', sendImage);
 
-    // Load chat history and saved theme
     loadChatHistory();
     loadConversationList();
     applySavedTheme();
@@ -75,6 +73,7 @@ async function sendImage() {
         }
     };
     reader.readAsDataURL(file);
+
 }
 
 function appendMessage(sender, message) {
@@ -171,7 +170,7 @@ async function editMessage(messageElement) {
         updateMessageInLocalStorage(messageElement, newMessage);
 
         try {
-            const response = await fetch('/.netlify/functions/eps', {
+            const response = await fetch('/eps', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt: newMessage })
@@ -190,10 +189,35 @@ async function editMessage(messageElement) {
 
 function deleteMessage(messageElement) {
     if (confirm('Tem certeza de que deseja excluir esta mensagem?')) {
-        removeMessageFromLocalStorage(messageElement);
         messageElement.remove();
-        showNotification('Mensagem excluída.');
+        removeMessageFromLocalStorage(messageElement);
     }
+}
+
+function updateMessageInLocalStorage(messageElement, newMessage) {
+    const currentChatId = localStorage.getItem('currentChatId');
+    const chatHistory = JSON.parse(localStorage.getItem(currentChatId)) || [];
+    const messageIndex = Array.from(messageElement.parentElement.children).indexOf(messageElement);
+    if (chatHistory[messageIndex]) {
+        chatHistory[messageIndex].message = newMessage;
+        localStorage.setItem(currentChatId, JSON.stringify(chatHistory));
+    }
+}
+
+function removeMessageFromLocalStorage(messageElement) {
+    const currentChatId = localStorage.getItem('currentChatId');
+    const chatHistory = JSON.parse(localStorage.getItem(currentChatId)) || [];
+    const messageIndex = Array.from(messageElement.parentElement.children).indexOf(messageElement);
+    chatHistory.splice(messageIndex, 1);
+    localStorage.setItem(currentChatId, JSON.stringify(chatHistory));
+}
+
+function saveMessage(sender, message) {
+    const currentChatId = localStorage.getItem('currentChatId') || Date.now().toString();
+    const chatHistory = JSON.parse(localStorage.getItem(currentChatId)) || [];
+    chatHistory.push({ sender, message });
+    localStorage.setItem(currentChatId, JSON.stringify(chatHistory));
+    localStorage.setItem('currentChatId', currentChatId);
 }
 
 function loadChatHistory() {
@@ -201,77 +225,48 @@ function loadChatHistory() {
     if (!currentChatId) return;
 
     const chatHistory = JSON.parse(localStorage.getItem(currentChatId)) || [];
-    chatHistory.forEach(entry => {
-        if (entry.message === '[imagem]') {
-            appendImageMessage(entry.sender, entry.message);
-        } else {
-            appendMessage(entry.sender, entry.message);
-        }
-    });
-}
-
-function saveMessage(sender, message) {
-    const currentChatId = localStorage.getItem('currentChatId') || Date.now().toString();
-    localStorage.setItem('currentChatId', currentChatId);
-
-    const chatHistory = JSON.parse(localStorage.getItem(currentChatId)) || [];
-    chatHistory.push({ sender, message });
-    localStorage.setItem(currentChatId, JSON.stringify(chatHistory));
-}
-
-function updateMessageInLocalStorage(messageElement, newMessage) {
-    const currentChatId = localStorage.getItem('currentChatId');
-    if (!currentChatId) return;
-
-    const chatHistory = JSON.parse(localStorage.getItem(currentChatId)) || [];
-    const index = Array.from(messageElement.parentNode.children).indexOf(messageElement);
-    chatHistory[index].message = newMessage;
-    localStorage.setItem(currentChatId, JSON.stringify(chatHistory));
-}
-
-function removeMessageFromLocalStorage(messageElement) {
-    const currentChatId = localStorage.getItem('currentChatId');
-    if (!currentChatId) return;
-
-    const chatHistory = JSON.parse(localStorage.getItem(currentChatId)) || [];
-    const index = Array.from(messageElement.parentNode.children).indexOf(messageElement);
-    chatHistory.splice(index, 1);
-    localStorage.setItem(currentChatId, JSON.stringify(chatHistory));
+    chatHistory.forEach(entry => appendMessage(entry.sender, entry.message));
 }
 
 function clearCurrentChatHistory() {
     const currentChatId = localStorage.getItem('currentChatId');
-    if (currentChatId) {
-        localStorage.removeItem(currentChatId);
-        document.getElementById('chat-box').innerHTML = '';
-        showNotification('Histórico da conversa atual apagado.');
-    }
+    if (!currentChatId) return;
+
+    localStorage.removeItem(currentChatId);
+    document.getElementById('chat-box').innerHTML = '';
+    showNotification('Histórico de conversa atual limpo!');
 }
 
 function startNewConversation() {
-    localStorage.setItem('currentChatId', Date.now().toString());
-    document.getElementById('chat-box').innerHTML = '';
-    showNotification('Nova conversa iniciada.');
-}
-
-function deleteHistory() {
-    if (confirm('Tem certeza de que deseja excluir todo o histórico?')) {
-        localStorage.clear();
-        document.getElementById('chat-box').innerHTML = '';
-        showNotification('Todo o histórico foi apagado.');
+    const currentChatId = localStorage.getItem('currentChatId');
+    if (currentChatId) {
+        const chatHistory = JSON.parse(localStorage.getItem(currentChatId)) || [];
+        if (chatHistory.length > 0) {
+            let chatName = prompt("Digite o nome da conversa:") || Conversa ${new Date(Number(currentChatId)).toLocaleString()};
+            localStorage.setItem(chatName_${currentChatId}, chatName);
+        }
     }
+
+    const newChatId = Date.now().toString();
+    localStorage.setItem('currentChatId', newChatId);
+    document.getElementById('chat-box').innerHTML = '';
+    loadConversationList();
+    showNotification('Nova conversa iniciada!');
 }
 
 function loadConversationList() {
-    const chatList = document.getElementById('chat-list');
-    chatList.innerHTML = '';
+    const conversationList = document.getElementById('conversation-list');
+    conversationList.innerHTML = '';
 
     Object.keys(localStorage).forEach(key => {
-        if (!isNaN(key)) {
+        if (key.startsWith('chatName_')) {
+            const chatId = key.replace('chatName_', '');
+            const chatName = localStorage.getItem(key);
             const listItem = document.createElement('li');
-            listItem.textContent = new Date(parseInt(key)).toLocaleString();
-            listItem.addEventListener('click', () => loadConversation(key));
-            chatList.appendChild(listItem);
+            listItem.textContent = chatName;
+            listItem.dataset.chatId = chatId;
+            listItem.addEventListener('click', () => loadConversation(chatId));
+            conversationList.appendChild(listItem);
         }
     });
 }
@@ -280,23 +275,44 @@ function loadConversation(chatId) {
     localStorage.setItem('currentChatId', chatId);
     document.getElementById('chat-box').innerHTML = '';
     loadChatHistory();
+    showNotification('Conversa carregada!');
+}
+
+function deleteHistory() {
+    if (confirm('Você tem certeza que deseja apagar todo o histórico de conversas? Esta ação não pode ser desfeita.')) {
+        Object.keys(localStorage).forEach(key => {
+            if (key.startsWith('chatName_') || !isNaN(Number(key))) {
+                localStorage.removeItem(key);
+            }
+        });
+        document.getElementById('chat-box').innerHTML = '';
+        loadConversationList();
+        showNotification('Histórico de conversas apagado!');
+    }
+}
+
+function toggleTheme() {
+    const body = document.body;
+    body.classList.toggle('dark-mode');
+    const isDarkMode = body.classList.contains('dark-mode');
+    localStorage.setItem('darkMode', isDarkMode ? 'enabled' : 'disabled');
+    showNotification(isDarkMode ? 'Modo escuro ativado!' : 'Modo claro ativado!');
+}
+
+function applySavedTheme() {
+    const savedTheme = localStorage.getItem('darkMode');
+    if (savedTheme === 'enabled') {
+        document.body.classList.add('dark-mode');
+    } else {
+        document.body.classList.remove('dark-mode');
+    }
 }
 
 function showNotification(message) {
     const notification = document.getElementById('notification');
     notification.textContent = message;
-    notification.classList.add('show');
-    setTimeout(() => notification.classList.remove('show'), 3000);
-}
-
-function toggleTheme() {
-    const currentTheme = document.body.className;
-    const newTheme = currentTheme === 'light-theme' ? 'dark-theme' : 'light-theme';
-    document.body.className = newTheme;
-    localStorage.setItem('theme', newTheme);
-}
-
-function applySavedTheme() {
-    const savedTheme = localStorage.getItem('theme') || 'light-theme';
-    document.body.className = savedTheme;
+    notification.style.display = 'block';
+    setTimeout(() => {
+        notification.style.display = 'none';
+    }, 3000);
 }
