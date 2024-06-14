@@ -19,10 +19,10 @@ const getResponse = async (prompt) => {
 
         const response = await axios.post(apiUrl, {
             prompt: `${instructions}\n\n${prompt}`,
-            max_tokens: 10, // Ajuste conforme necessário
+            max_tokens: 150, // Ajuste conforme necessário
             n: 1,
             stop: null,
-            temperature: 0.7,
+            temperature: 0.3,
         }, {
             headers: {
                 'Content-Type': 'application/json',

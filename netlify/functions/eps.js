@@ -4,7 +4,7 @@ exports.handler = async function(event, context) {
     try {
         const body = JSON.parse(event.body);
         const prompt = body.prompt;
-        const model = 'text-davinci-003'; // Certifique-se de usar o modelo correto
+        const model = 'gpt-4o'; // Certifique-se de usar o modelo correto
         const apiKey = process.env.OPENAI_API_KEY;
 
         if (!apiKey) {
