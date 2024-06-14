@@ -1,0 +1,19 @@
+{
+  "name": "papfinal",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "netlify-lambda build src",
+    "start": "netlify-lambda serve src"
+  },
+  "dependencies": {
+    "node-fetch": "^2.6.1"
+  },
+  "devDependencies": {
+    "netlify-lambda": "^1.6.3"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
