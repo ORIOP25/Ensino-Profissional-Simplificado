@@ -1,8 +1,8 @@
-const express = require('../node_modules/express');
-const bodyParser = require('../node_modules/body-parser');
-const axios = require('../node_modules/axios');
-const path = require('../node_modules/path');
-require('../node_modules/dotenv').config();
+const express = require("express");
+const bodyParser = require("body-parser");
+const axios = require("axios");
+const path = require("path");
+require("dotenv").config();
 
 const app = express();
 const port = 3000;
