@@ -1,25 +1,16 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const sendBtn = document.getElementById('send-btn');
-    const userInput = document.getElementById('user-input');
-    const clearHistoryBtn = document.getElementById('clear-history-btn');
-    const newConversationBtn = document.getElementById('new-conversation-btn');
-    const deleteHistoryBtn = document.getElementById('delete-history-btn');
-    const toggleThemeBtn = document.getElementById('toggle-theme-btn');
-    const sendImageBtn = document.getElementById('send-image-btn');
-    const imageInput = document.getElementById('image-input');
-
-    if (sendBtn) sendBtn.addEventListener('click', sendMessage);
-    if (userInput) userInput.addEventListener('keypress', (e) => {
+    document.getElementById('send-btn').addEventListener('click', sendMessage);
+    document.getElementById('user-input').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') sendMessage();
     });
-    if (clearHistoryBtn) clearHistoryBtn.addEventListener('click', clearCurrentChatHistory);
-    if (newConversationBtn) newConversationBtn.addEventListener('click', startNewConversation);
-    if (deleteHistoryBtn) deleteHistoryBtn.addEventListener('click', deleteHistory);
-    if (toggleThemeBtn) toggleThemeBtn.addEventListener('click', toggleTheme);
-    if (sendImageBtn) sendImageBtn.addEventListener('click', () => {
-        if (imageInput) imageInput.click();
+    document.getElementById('clear-history-btn').addEventListener('click', clearCurrentChatHistory);
+    document.getElementById('new-conversation-btn').addEventListener('click', startNewConversation);
+    document.getElementById('delete-history-btn').addEventListener('click', deleteHistory);
+    document.getElementById('toggle-theme-btn').addEventListener('click', toggleTheme);
+    document.getElementById('send-image-btn').addEventListener('click', () => {
+        document.getElementById('image-input').click();
     });
-    if (imageInput) imageInput.addEventListener('change', sendImage);
+    document.getElementById('image-input').addEventListener('change', sendImage);
 
     loadChatHistory();
     loadConversationList();
@@ -37,7 +28,7 @@ async function sendMessage() {
     showNotification('Mensagem enviada!');
 
     try {
-        const response = await fetch('/eps', {
+        const response = await fetch('/.netlify/functions/eps', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ prompt: message })
@@ -66,7 +57,7 @@ async function sendImage() {
         showNotification('Imagem enviada!');
 
         try {
-            const response = await fetch('/eps', {
+            const response = await fetch('/.netlify/functions/eps', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt: '[imagem]', image: imageUrl })
@@ -82,6 +73,7 @@ async function sendImage() {
         }
     };
     reader.readAsDataURL(file);
+
 }
 
 function appendMessage(sender, message) {
@@ -238,58 +230,81 @@ function loadChatHistory() {
 
 function clearCurrentChatHistory() {
     const currentChatId = localStorage.getItem('currentChatId');
+    if (!currentChatId) return;
+
+    localStorage.removeItem(currentChatId);
+    document.getElementById('chat-box').innerHTML = '';
+    showNotification('Histórico de conversa atual limpo!');
+}
+
+function startNewConversation() {
+    const currentChatId = localStorage.getItem('currentChatId');
     if (currentChatId) {
-        localStorage.removeItem(currentChatId);
-        document.getElementById('chat-box').innerHTML = '';
-        showNotification('Histórico de chat limpo!');
+        const chatHistory = JSON.parse(localStorage.getItem(currentChatId)) || [];
+        if (chatHistory.length > 0) {
+            let chatName = prompt("Digite o nome da conversa:") || `Conversa ${new Date(Number(currentChatId)).toLocaleString()}`;
+            localStorage.setItem(`chatName_${currentChatId}`, chatName);
+        }
     }
+
+    const newChatId = Date.now().toString();
+    localStorage.setItem('currentChatId', newChatId);
+    document.getElementById('chat-box').innerHTML = '';
+    loadConversationList();
+    showNotification('Nova conversa iniciada!');
 }
 
 function loadConversationList() {
     const conversationList = document.getElementById('conversation-list');
     conversationList.innerHTML = '';
 
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key !== 'currentChatId') {
-            const conversationItem = document.createElement('li');
-            conversationItem.textContent = key;
-            conversationItem.addEventListener('click', () => loadConversation(key));
-            conversationList.appendChild(conversationItem);
+    Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('chatName_')) {
+            const chatId = key.replace('chatName_', '');
+            const chatName = localStorage.getItem(key);
+            const listItem = document.createElement('li');
+            listItem.textContent = chatName;
+            listItem.dataset.chatId = chatId;
+            listItem.addEventListener('click', () => loadConversation(chatId));
+            conversationList.appendChild(listItem);
         }
-    }
+    });
 }
 
 function loadConversation(chatId) {
     localStorage.setItem('currentChatId', chatId);
-    loadChatHistory();
-}
-
-function startNewConversation() {
-    localStorage.removeItem('currentChatId');
     document.getElementById('chat-box').innerHTML = '';
-    showNotification('Nova conversa iniciada!');
+    loadChatHistory();
+    showNotification('Conversa carregada!');
 }
 
 function deleteHistory() {
-    if (confirm('Tem certeza de que deseja excluir todo o histórico de conversas?')) {
-        localStorage.clear();
+    if (confirm('Você tem certeza que deseja apagar todo o histórico de conversas? Esta ação não pode ser desfeita.')) {
+        Object.keys(localStorage).forEach(key => {
+            if (key.startsWith('chatName_') || !isNaN(Number(key))) {
+                localStorage.removeItem(key);
+            }
+        });
         document.getElementById('chat-box').innerHTML = '';
         loadConversationList();
-        showNotification('Todo o histórico de conversas foi excluído!');
+        showNotification('Histórico de conversas apagado!');
     }
 }
 
 function toggleTheme() {
-    document.body.classList.toggle('dark-theme');
-    const theme = document.body.classList.contains('dark-theme') ? 'dark' : 'light';
-    localStorage.setItem('theme', theme);
+    const body = document.body;
+    body.classList.toggle('dark-mode');
+    const isDarkMode = body.classList.contains('dark-mode');
+    localStorage.setItem('darkMode', isDarkMode ? 'enabled' : 'disabled');
+    showNotification(isDarkMode ? 'Modo escuro ativado!' : 'Modo claro ativado!');
 }
 
 function applySavedTheme() {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-        document.body.classList.add('dark-theme');
+    const savedTheme = localStorage.getItem('darkMode');
+    if (savedTheme === 'enabled') {
+        document.body.classList.add('dark-mode');
+    } else {
+        document.body.classList.remove('dark-mode');
     }
 }
 
