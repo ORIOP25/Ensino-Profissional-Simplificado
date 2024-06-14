@@ -1,16 +1,25 @@
 document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('send-btn').addEventListener('click', sendMessage);
-    document.getElementById('user-input').addEventListener('keypress', (e) => {
+    const sendBtn = document.getElementById('send-btn');
+    const userInput = document.getElementById('user-input');
+    const clearHistoryBtn = document.getElementById('clear-history-btn');
+    const newConversationBtn = document.getElementById('new-conversation-btn');
+    const deleteHistoryBtn = document.getElementById('delete-history-btn');
+    const toggleThemeBtn = document.getElementById('toggle-theme-btn');
+    const sendImageBtn = document.getElementById('send-image-btn');
+    const imageInput = document.getElementById('image-input');
+
+    if (sendBtn) sendBtn.addEventListener('click', sendMessage);
+    if (userInput) userInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') sendMessage();
     });
-    document.getElementById('clear-history-btn').addEventListener('click', clearCurrentChatHistory);
-    document.getElementById('new-conversation-btn').addEventListener('click', startNewConversation);
-    document.getElementById('delete-history-btn').addEventListener('click', deleteHistory);
-    document.getElementById('toggle-theme-btn').addEventListener('click', toggleTheme);
-    document.getElementById('send-image-btn').addEventListener('click', () => {
-        document.getElementById('image-input').click();
+    if (clearHistoryBtn) clearHistoryBtn.addEventListener('click', clearCurrentChatHistory);
+    if (newConversationBtn) newConversationBtn.addEventListener('click', startNewConversation);
+    if (deleteHistoryBtn) deleteHistoryBtn.addEventListener('click', deleteHistory);
+    if (toggleThemeBtn) toggleThemeBtn.addEventListener('click', toggleTheme);
+    if (sendImageBtn) sendImageBtn.addEventListener('click', () => {
+        if (imageInput) imageInput.click();
     });
-    document.getElementById('image-input').addEventListener('change', sendImage);
+    if (imageInput) imageInput.addEventListener('change', sendImage);
 
     loadChatHistory();
     loadConversationList();
@@ -229,81 +238,58 @@ function loadChatHistory() {
 
 function clearCurrentChatHistory() {
     const currentChatId = localStorage.getItem('currentChatId');
-    if (!currentChatId) return;
-
-    localStorage.removeItem(currentChatId);
-    document.getElementById('chat-box').innerHTML = '';
-    showNotification('Histórico de conversa atual limpo!');
-}
-
-function startNewConversation() {
-    const currentChatId = localStorage.getItem('currentChatId');
     if (currentChatId) {
-        const chatHistory = JSON.parse(localStorage.getItem(currentChatId)) || [];
-        if (chatHistory.length > 0) {
-            let chatName = prompt("Digite o nome da conversa:") || `Conversa ${new Date(Number(currentChatId)).toLocaleString()}`;
-            localStorage.setItem(`chatName_${currentChatId}`, chatName);
-        }
+        localStorage.removeItem(currentChatId);
+        document.getElementById('chat-box').innerHTML = '';
+        showNotification('Histórico de chat limpo!');
     }
-
-    const newChatId = Date.now().toString();
-    localStorage.setItem('currentChatId', newChatId);
-    document.getElementById('chat-box').innerHTML = '';
-    loadConversationList();
-    showNotification('Nova conversa iniciada!');
 }
 
 function loadConversationList() {
     const conversationList = document.getElementById('conversation-list');
     conversationList.innerHTML = '';
 
-    Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('chatName_')) {
-            const chatId = key.replace('chatName_', '');
-            const chatName = localStorage.getItem(key);
-            const listItem = document.createElement('li');
-            listItem.textContent = chatName;
-            listItem.dataset.chatId = chatId;
-            listItem.addEventListener('click', () => loadConversation(chatId));
-            conversationList.appendChild(listItem);
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key !== 'currentChatId') {
+            const conversationItem = document.createElement('li');
+            conversationItem.textContent = key;
+            conversationItem.addEventListener('click', () => loadConversation(key));
+            conversationList.appendChild(conversationItem);
         }
-    });
+    }
 }
 
 function loadConversation(chatId) {
     localStorage.setItem('currentChatId', chatId);
-    document.getElementById('chat-box').innerHTML = '';
     loadChatHistory();
-    showNotification('Conversa carregada!');
+}
+
+function startNewConversation() {
+    localStorage.removeItem('currentChatId');
+    document.getElementById('chat-box').innerHTML = '';
+    showNotification('Nova conversa iniciada!');
 }
 
 function deleteHistory() {
-    if (confirm('Você tem certeza que deseja apagar todo o histórico de conversas? Esta ação não pode ser desfeita.')) {
-        Object.keys(localStorage).forEach(key => {
-            if (key.startsWith('chatName_') || !isNaN(Number(key))) {
-                localStorage.removeItem(key);
-            }
-        });
+    if (confirm('Tem certeza de que deseja excluir todo o histórico de conversas?')) {
+        localStorage.clear();
         document.getElementById('chat-box').innerHTML = '';
         loadConversationList();
-        showNotification('Histórico de conversas apagado!');
+        showNotification('Todo o histórico de conversas foi excluído!');
     }
 }
 
 function toggleTheme() {
-    const body = document.body;
-    body.classList.toggle('dark-mode');
-    const isDarkMode = body.classList.contains('dark-mode');
-    localStorage.setItem('darkMode', isDarkMode ? 'enabled' : 'disabled');
-    showNotification(isDarkMode ? 'Modo escuro ativado!' : 'Modo claro ativado!');
+    document.body.classList.toggle('dark-theme');
+    const theme = document.body.classList.contains('dark-theme') ? 'dark' : 'light';
+    localStorage.setItem('theme', theme);
 }
 
 function applySavedTheme() {
-    const savedTheme = localStorage.getItem('darkMode');
-    if (savedTheme === 'enabled') {
-        document.body.classList.add('dark-mode');
-    } else {
-        document.body.classList.remove('dark-mode');
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        document.body.classList.add('dark-theme');
     }
 }
 
