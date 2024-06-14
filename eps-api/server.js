@@ -8,7 +8,7 @@ const app = express();
 const port = 3000;
 
 app.use(bodyParser.json());
-app.use('/static/script.js', express.static(path.join(__dirname, '/static/style.css')));
+app.use('../static/script.js', express.static(path.join(__dirname, '../static/style.css')));
 
 const openaiApiKey = process.env.OPENAI_API_KEY;
 const model = 'gpt-4o';
@@ -65,7 +65,7 @@ app.post('/eps', async (req, res) => {
 });
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '/static', 'index.html'));
+    res.sendFile(path.join(__dirname, '../static', 'index.html'));
 });
 
 app.listen(port, () => {
