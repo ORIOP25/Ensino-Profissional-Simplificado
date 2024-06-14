@@ -1,19 +1,17 @@
 {
-  "name": "papfinal",
+  "name": "ensino-profissional-simplificado",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "Ensino Profissional Simplificado Web Page",
+  "main": "server.js",
   "scripts": {
-    "build": "netlify-lambda build src",
-    "start": "netlify-lambda serve src"
+    "start": "node server.js",
+    "build": "echo 'No build script defined' && exit 0"
   },
   "dependencies": {
-    "node-fetch": "^2.6.1"
-  },
-  "devDependencies": {
-    "netlify-lambda": "^1.6.3"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": ""
+    "express": "^4.17.1",
+    "body-parser": "^1.19.0",
+    "axios": "^0.21.1",
+    "dotenv": "^8.2.0",
+    "cors": "^2.8.5"
+  }
 }
