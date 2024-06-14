@@ -28,7 +28,7 @@ async function sendMessage() {
     showNotification('Mensagem enviada!');
 
     try {
-        const response = await fetch('/.netlify/functions/eps', {
+        const response = await fetch('./netlify/functions/eps', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ prompt: message })
@@ -57,7 +57,7 @@ async function sendImage() {
         showNotification('Imagem enviada!');
 
         try {
-            const response = await fetch('/.netlify/functions/eps', {
+            const response = await fetch('./netlify/functions/eps', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt: '[imagem]', image: imageUrl })
@@ -170,7 +170,7 @@ async function editMessage(messageElement) {
         updateMessageInLocalStorage(messageElement, newMessage);
 
         try {
-            const response = await fetch('/eps', {
+            const response = await fetch('./netlify/functions/eps', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt: newMessage })
