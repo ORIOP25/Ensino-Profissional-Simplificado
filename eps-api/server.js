@@ -65,7 +65,7 @@ app.post('/eps', async (req, res) => {
 });
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../templates', 'index.html'));
+    res.sendFile(path.join(__dirname, '../static', 'index.html'));
 });
 
 app.listen(port, () => {

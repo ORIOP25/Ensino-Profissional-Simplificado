@@ -2,10 +2,9 @@
   "name": "ensino-profissional-simplificado",
   "version": "1.0.0",
   "description": "Ensino Profissional Simplificado Web Page",
-  "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "build": "echo 'No build script defined' && exit 0"
+    "start": "node eps-api/server.js",
+    "build": "echo 'Building the project...'"
   },
   "dependencies": {
     "express": "^4.17.1",
