@@ -8,7 +8,7 @@ const app = express();
 const port = 3000;
 
 app.use(bodyParser.json());
-app.use('../static/script.js', express.static(path.join(__dirname, '../static/style.css')));
+app.use('/static/style.css', express.static(path.join(__dirname, '/static/style.css')));
 
 const openaiApiKey = process.env.OPENAI_API_KEY;
 const model = 'gpt-4o';

@@ -242,8 +242,8 @@ function startNewConversation() {
     if (currentChatId) {
         const chatHistory = JSON.parse(localStorage.getItem(currentChatId)) || [];
         if (chatHistory.length > 0) {
-            let chatName = prompt("Digite o nome da conversa:") || Conversa ${new Date(Number(currentChatId)).toLocaleString()};
-            localStorage.setItem(chatName_${currentChatId}, chatName);
+            let chatName = prompt("Digite o nome da conversa:") || Conversa$(new Date(Number(currentChatId)).toLocaleString());
+            localStorage.setItem(chatName_$(currentChatId), chatName);
         }
     }
 
