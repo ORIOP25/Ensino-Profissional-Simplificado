@@ -1,54 +1,51 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const axios = require("axios");
 const path = require("path");
+const { spawn } = require("child_process");
 require("dotenv").config();
 
 const app = express();
 const port = 3000;
 
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, '../static')));
+app.use(express.static(path.join(__dirname, 'static')));
+
+// Adicionando CORS
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+});
 
 app.use((req, res, next) => {
     console.log(`Request URL: ${req.url}`);
     next();
 });
 
-const openaiApiKey = process.env.OPENAI_API_KEY;
-const model = 'gpt-4o';
+const runPythonScript = (scriptPath, args) => {
+    return new Promise((resolve, reject) => {
+        const venvPath = path.join(__dirname, '.venv', 'Scripts', 'python'); // Windows
+        // const venvPath = path.join(__dirname, '.venv', 'bin', 'python'); // Linux/Mac
+        const pyProg = spawn(venvPath, [scriptPath].concat(args));
 
-const instructions = `
-O teu nome é “EPS” (Ensino Profissional Simplificado).
-`;
-
-const getResponse = async (prompt) => {
-    try {
-        const apiUrl = 'https://api.openai.com/v1/chat/completions';
-
-        console.log('Sending request to OpenAI API...');
-        const response = await axios.post(apiUrl, {
-            model: model,
-            messages: [{
-                role: "system",
-                content: instructions
-            }, {
-                role: "user",
-                content: prompt
-            }]
-        }, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${openaiApiKey}`
-            }
+        let data = '';
+        pyProg.stdout.on('data', (stdout) => {
+            data += stdout.toString();
         });
 
-        console.log('Received response from OpenAI API:', response.data);
-        return response.data.choices[0].message.content.trim();
-    } catch (error) {
-        console.error('Error fetching response from OpenAI model:', error.response ? error.response.data : error.message);
-        throw new Error('Error fetching response from OpenAI model');
-    }
+        pyProg.stderr.on('data', (stderr) => {
+            console.error(`stderr: ${stderr}`);
+            reject(stderr.toString());
+        });
+
+        pyProg.on('close', (code) => {
+            if (code === 0) {
+                resolve(data);
+            } else {
+                reject(`child process exited with code ${code}`);
+            }
+        });
+    });
 };
 
 app.post('/eps', async (req, res) => {
@@ -60,18 +57,19 @@ app.post('/eps', async (req, res) => {
 
     try {
         console.log('Received prompt:', prompt);
-        const response = await getResponse(prompt);
+        const scriptPath = path.join(__dirname, 'eps-api', 'testeAPI.py');
+        const response = await runPythonScript(scriptPath, [prompt]);
         console.log('Sending response:', response);
         res.json({ response });
     } catch (error) {
-        console.error('Error in /eps endpoint:', error.message);
+        console.error('Error in /eps endpoint:', error);
         res.status(500).json({ error: 'Failed to get response from EPS model' });
     }
 });
 
 app.get('/', (req, res) => {
     console.log('Serving index.html');
-    res.sendFile(path.join(__dirname, '../static', 'index.html'));
+    res.sendFile(path.join(__dirname, 'static', 'index.html'));
 });
 
 app.listen(port, () => {
