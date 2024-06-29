@@ -2,13 +2,14 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const path = require("path");
 const { spawn } = require("child_process");
+const fs = require("fs");
 require("dotenv").config();
 
 const app = express();
 const port = 3000;
 
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, 'static')));
+app.use(express.static(path.join(__dirname, '..', 'static')));
 
 // Adicionando CORS
 app.use((req, res, next) => {
@@ -22,15 +23,27 @@ app.use((req, res, next) => {
     next();
 });
 
+const getPythonExecutablePath = () => {
+    const venvPathWindows = path.join(__dirname, '..', '.venv', 'Scripts', 'python.exe'); // Windows
+    const venvPathUnix = path.join(__dirname, '..', '.venv', 'bin', 'python'); // Unix/Linux/Mac
+
+    if (fs.existsSync(venvPathWindows)) {
+        return venvPathWindows;
+    } else if (fs.existsSync(venvPathUnix)) {
+        return venvPathUnix;
+    } else {
+        throw new Error('Python executable not found in .venv');
+    }
+};
+
 const runPythonScript = (scriptPath, args) => {
     return new Promise((resolve, reject) => {
-        const venvPath = path.join(__dirname, '.venv', 'Scripts', 'python'); // Windows
-        // const venvPath = path.join(__dirname, '.venv', 'bin', 'python'); // Linux/Mac
-        const pyProg = spawn(venvPath, [scriptPath].concat(args));
+        const pythonExecutable = getPythonExecutablePath();
+        const pyProg = spawn(pythonExecutable, [scriptPath].concat(args));
 
         let data = '';
         pyProg.stdout.on('data', (stdout) => {
-            data += stdout.toString();
+            data += stdout.toString('utf8'); // Usando UTF-8
         });
 
         pyProg.stderr.on('data', (stderr) => {
@@ -49,17 +62,19 @@ const runPythonScript = (scriptPath, args) => {
 };
 
 app.post('/eps', async (req, res) => {
-    const { prompt } = req.body;
+    const { prompt, image } = req.body;
 
-    if (!prompt) {
-        return res.status(400).json({ error: 'Prompt is required' });
+    if (!prompt && !image) {
+        return res.status(400).json({ error: 'Prompt or image is required' });
     }
 
     try {
-        console.log('Received prompt:', prompt);
-        const scriptPath = path.join(__dirname, 'eps-api', 'testeAPI.py');
-        const response = await runPythonScript(scriptPath, [prompt]);
+        console.log('Received prompt:', prompt || 'Analyze this image:');
+        const scriptPath = image ? path.join(__dirname, 'imagem.py') : path.join(__dirname, 'texto.py');
+        const args = image ? [prompt || 'Analyze this image:', image] : [prompt];
+        const response = await runPythonScript(scriptPath, args);
         console.log('Sending response:', response);
+        res.setHeader('Content-Type', 'application/json; charset=utf-8'); // Adiciona UTF-8
         res.json({ response });
     } catch (error) {
         console.error('Error in /eps endpoint:', error);
@@ -69,7 +84,7 @@ app.post('/eps', async (req, res) => {
 
 app.get('/', (req, res) => {
     console.log('Serving index.html');
-    res.sendFile(path.join(__dirname, 'static', 'index.html'));
+    res.sendFile(path.join(__dirname, '..', 'static', 'index.html'));
 });
 
 app.listen(port, () => {

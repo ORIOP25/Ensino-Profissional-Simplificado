@@ -3,18 +3,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('user-input').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') sendMessage();
     });
-    document.getElementById('clear-history-btn').addEventListener('click', clearCurrentChatHistory);
-    document.getElementById('new-conversation-btn').addEventListener('click', startNewConversation);
-    document.getElementById('delete-history-btn').addEventListener('click', deleteHistory);
-    document.getElementById('toggle-theme-btn').addEventListener('click', toggleTheme);
     document.getElementById('send-image-btn').addEventListener('click', () => {
         document.getElementById('image-input').click();
     });
     document.getElementById('image-input').addEventListener('change', sendImage);
-
-    loadChatHistory();
-    loadConversationList();
-    applySavedTheme();
 });
 
 async function sendMessage() {
@@ -25,7 +17,6 @@ async function sendMessage() {
 
     appendMessage('user', message);
     inputField.value = '';
-    showNotification('Mensagem enviada!');
 
     try {
         const response = await fetch('/eps', {
@@ -40,7 +31,6 @@ async function sendMessage() {
         appendMessage('assistant', data.response);
     } catch (error) {
         appendMessage('assistant', 'Desculpe, ocorreu um erro. Tente novamente.');
-        showNotification('Erro de rede. Tente novamente.');
     }
 }
 
@@ -49,31 +39,25 @@ async function sendImage() {
     const file = imageInput.files[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = async () => {
-        const imageUrl = reader.result;
-        appendImageMessage('user', imageUrl);
-        imageInput.value = '';
-        showNotification('Imagem enviada!');
+    const formData = new FormData();
+    formData.append('image', file);
 
-        try {
-            const response = await fetch('/netlify/functions/eps.js', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: '[imagem]', image: imageUrl })
-            });
+    appendImageMessage('user', URL.createObjectURL(file));
+    imageInput.value = '';
 
-            if (!response.ok) throw new Error('Network response was not ok');
-            
-            const data = await response.json();
-            appendMessage('assistant', data.response);
-        } catch (error) {
-            appendMessage('assistant', 'Desculpe, ocorreu um erro. Tente novamente.');
-            showNotification('Erro de rede. Tente novamente.');
-        }
-    };
-    reader.readAsDataURL(file);
+    try {
+        const response = await fetch('/eps/image', {
+            method: 'POST',
+            body: formData
+        });
 
+        if (!response.ok) throw new Error('Network response was not ok');
+        
+        const data = await response.json();
+        appendMessage('assistant', data.response);
+    } catch (error) {
+        appendMessage('assistant', 'Desculpe, ocorreu um erro. Tente novamente.');
+    }
 }
 
 function appendMessage(sender, message) {
@@ -82,7 +66,7 @@ function appendMessage(sender, message) {
     messageElement.classList.add('message', sender);
 
     const img = document.createElement('img');
-    img.src = sender === 'user' ? '/path/to/user-image.jpg' : '/path/to/assistant-image.jpg';
+    img.src = sender === 'user' ? '/static/Imagens/pessoapap.jpg' : '/static/Imagens/robopap.jpg';
     img.alt = sender === 'user' ? 'User' : 'Assistant';
     messageElement.appendChild(img);
 
@@ -90,18 +74,8 @@ function appendMessage(sender, message) {
     text.textContent = message;
     messageElement.appendChild(text);
 
-    if (sender === 'user') {
-        const settingsButton = document.createElement('button');
-        settingsButton.innerHTML = '⚙';
-        settingsButton.classList.add('settings-btn');
-        settingsButton.addEventListener('click', () => toggleEditDeleteOptions(messageElement));
-        messageElement.appendChild(settingsButton);
-    }
-
     chatBox.appendChild(messageElement);
     chatBox.scrollTop = chatBox.scrollHeight;
-
-    saveMessage(sender, message);
 }
 
 function appendImageMessage(sender, imageUrl) {
@@ -110,7 +84,7 @@ function appendImageMessage(sender, imageUrl) {
     messageElement.classList.add('message', sender);
 
     const img = document.createElement('img');
-    img.src = sender === 'user' ? '/path/to/user-image.jpg' : '/path/to/assistant-image.jpg';
+    img.src = sender === 'user' ? '/static/Imagens/pessoapap.jpg' : '/static/Imagens/robopap.jpg';
     img.alt = sender === 'user' ? 'User' : 'Assistant';
     messageElement.appendChild(img);
 
@@ -118,19 +92,10 @@ function appendImageMessage(sender, imageUrl) {
     image.src = imageUrl;
     messageElement.appendChild(image);
 
-    if (sender === 'user') {
-        const settingsButton = document.createElement('button');
-        settingsButton.innerHTML = '⚙';
-        settingsButton.classList.add('settings-btn');
-        settingsButton.addEventListener('click', () => toggleEditDeleteOptions(messageElement));
-        messageElement.appendChild(settingsButton);
-    }
-
     chatBox.appendChild(messageElement);
     chatBox.scrollTop = chatBox.scrollHeight;
-
-    saveMessage(sender, '[imagem]');
 }
+
 
 function toggleEditDeleteOptions(messageElement) {
     let editDeleteContainer = messageElement.querySelector('.edit-delete-container');
@@ -210,6 +175,7 @@ function clearCurrentChatHistory() {
 }
 
 function loadChatHistory() {
+    console.log('Loading chat history');
     const messages = getCurrentChatHistory();
     for (const { sender, message } of messages) {
         if (message === '[imagem]') {
@@ -259,6 +225,7 @@ function showNotification(message) {
 }
 
 function loadConversationList() {
+    console.log('Loading conversation list');
     const conversationList = JSON.parse(localStorage.getItem('chatHistory')) || [];
     const conversationListElement = document.getElementById('conversation-list');
     conversationListElement.innerHTML = '';
