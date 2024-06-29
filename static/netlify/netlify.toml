@@ -1,7 +1,7 @@
 [build]
-  command = "cd ../eps-api && npm install && npm run build"
-  publish = "../static"
-  functions = "netlify/functions"
+  command = "npm install --prefix eps-api && npm run build --prefix eps-api"
+  publish = "static"
+  functions = "static/netlify/functions"
 
 [context.production.environment]
   OPENAI_API_KEY = "your-openai-api-key"

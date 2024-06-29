@@ -4,12 +4,11 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "build": "echo 'Skipping build step'"
+    "build": "echo 'No build step required'"
   },
   "dependencies": {
     "express": "^4.17.1",
-    "openai": "^3.1.0",
-    "child_process": "^1.0.2"
+    "openai": "^3.1.0"
   },
   "devDependencies": {},
   "keywords": [],
