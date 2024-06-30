@@ -1,7 +1,0 @@
-[build]
-  base = "" # Diretório raiz do projeto
-  command = "npm install --prefix eps-api && npm run build"
-  publish = "/opt/build/repo/static" # Diretório para publicar os arquivos estáticos
-
-[functions]
-  directory = "static/netlify/functions"
