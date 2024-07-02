@@ -4,40 +4,51 @@ from openai import OpenAI
 import os
 
 def handler(event, context):
-    try:
-        client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-        body = json.loads(event['body'])
+    # Definir o modelo a ser usado
+    MODEL = "gpt-4o"
 
-        if 'image' in body:
-            image_data = body['image']
-            base64_image = base64.b64encode(image_data.encode('utf-8')).decode('utf-8')
-            messages = [
-                {"role": "system", "content": "és um assistente que vê as cores dos bonecos"},
-                {"role": "user", "content": [
-                    {"type": "text", "text": "este emoji é de que cor ?"},
-                    {"type": "image_url", "image_url": f"data:image/png;base64,{base64_image}"}
-                ]}
-            ]
-        else:
-            prompt = body['prompt']
-            messages = [
-                {"role": "system", "content": "You are a helpful assistant. Help me with my math homework!"},
-                {"role": "user", "content": prompt}
-            ]
+    # Configurar o cliente OpenAI com a chave da API
+    client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=messages,
-            temperature=0.3,
-        )
+    # Primeira solicitação de chat
+    completion = client.chat.completions.create(
+        model=MODEL,
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant. Help me with my math homework!"},
+            {"role": "user", "content": "Hello! Could you solve 2+2?"}
+        ]
+    )
 
-        return {
-            'statusCode': 200,
-            'body': json.dumps({'response': response.choices[0].message.content})
-        }
+    # Caminho da imagem
+    IMAGE_PATH = "/path/to/your/image.jpg"
 
-    except Exception as e:
-        return {
-            'statusCode': 500,
-            'body': json.dumps({'error': str(e)})
-        }
+    # Função para codificar a imagem em base64
+    def encode_image(image_path):
+        with open(image_path, "rb") as image_file:
+            return base64.b64encode(image_file.read()).decode("utf-8")
+
+    # Codificar a imagem
+    base64_image = encode_image(IMAGE_PATH)
+
+    # Segunda solicitação de chat com a imagem codificada
+    response = client.chat.completions.create(
+        model=MODEL,
+        messages=[
+            {"role": "system", "content": "és um assistente que vê as cores dos bonecos"},
+            {"role": "user", "content": [
+                {"type": "text", "text": "este emoji é de que cor ?"},
+                {"type": "image_url", "image_url": {
+                    "url": f"data:image/png;base64,{base64_image}"}
+                }
+            ]}
+        ],
+        temperature=0.3,
+    )
+
+    # Retornar a resposta do assistente
+    return {
+        'statusCode': 200,
+        'body': json.dumps({
+            'message': response.choices[0].message.content
+        })
+    }

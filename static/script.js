@@ -120,6 +120,7 @@ function appendImageMessage(sender, imageUrl) {
 }
 
 
+
 function appendImageMessage(sender, imageUrl) {
     const chatBox = document.getElementById('chat-box');
     const messageElement = document.createElement('div');

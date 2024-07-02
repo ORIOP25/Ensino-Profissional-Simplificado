@@ -1,8 +1,7 @@
 [build]
-  publish = "static"
   functions = "netlify/functions"
 
 [[redirects]]
-  from = "/eps"
-  to = "/.netlify/functions/eps"
+  from = "/*"
+  to = "/index.html"
   status = 200
