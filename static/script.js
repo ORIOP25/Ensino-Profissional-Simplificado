@@ -7,6 +7,15 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('image-input').click();
     });
     document.getElementById('image-input').addEventListener('change', sendImage);
+
+    document.getElementById('new-conversation-btn').addEventListener('click', startNewConversation);
+    document.getElementById('clear-current-chat-btn').addEventListener('click', clearCurrentChatHistory);
+    document.getElementById('delete-history-btn').addEventListener('click', deleteHistory);
+    document.getElementById('toggle-theme-btn').addEventListener('click', toggleTheme);
+
+    applySavedTheme();
+    loadChatHistory();
+    loadConversationList();
 });
 
 async function sendMessage() {
@@ -16,6 +25,7 @@ async function sendMessage() {
     if (!message) return;
 
     appendMessage('user', message);
+    saveMessage('user', message);
     inputField.value = '';
 
     try {
@@ -29,8 +39,10 @@ async function sendMessage() {
         
         const data = await response.json();
         appendMessage('assistant', data.response);
+        saveMessage('assistant', data.response);
     } catch (error) {
         appendMessage('assistant', 'Desculpe, ocorreu um erro. Tente novamente.');
+        saveMessage('assistant', 'Desculpe, ocorreu um erro. Tente novamente.');
     }
 }
 
@@ -39,25 +51,32 @@ async function sendImage() {
     const file = imageInput.files[0];
     if (!file) return;
 
-    const formData = new FormData();
-    formData.append('image', file);
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+        const base64Image = reader.result.replace(/^data:.+;base64,/, '');
 
-    appendImageMessage('user', URL.createObjectURL(file));
-    imageInput.value = '';
+        appendImageMessage('user', URL.createObjectURL(file));
+        saveMessage('user', '[imagem]');
+        imageInput.value = '';
 
-    try {
-        const response = await fetch('/eps/image', {
-            method: 'POST',
-            body: formData
-        });
+        try {
+            const response = await fetch('/eps', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: base64Image })
+            });
 
-        if (!response.ok) throw new Error('Network response was not ok');
-        
-        const data = await response.json();
-        appendMessage('assistant', data.response);
-    } catch (error) {
-        appendMessage('assistant', 'Desculpe, ocorreu um erro. Tente novamente.');
-    }
+            if (!response.ok) throw new Error('Network response was not ok');
+
+            const data = await response.json();
+            appendMessage('assistant', data.response);
+            saveMessage('assistant', data.response);
+        } catch (error) {
+            appendMessage('assistant', 'Desculpe, ocorreu um erro. Tente novamente.');
+            saveMessage('assistant', 'Desculpe, ocorreu um erro. Tente novamente.');
+        }
+    };
+    reader.readAsDataURL(file);
 }
 
 function appendMessage(sender, message) {
@@ -73,6 +92,8 @@ function appendMessage(sender, message) {
     const text = document.createElement('div');
     text.textContent = message;
     messageElement.appendChild(text);
+
+    messageElement.addEventListener('click', () => toggleEditDeleteOptions(messageElement));
 
     chatBox.appendChild(messageElement);
     chatBox.scrollTop = chatBox.scrollHeight;
@@ -92,10 +113,32 @@ function appendImageMessage(sender, imageUrl) {
     image.src = imageUrl;
     messageElement.appendChild(image);
 
+    messageElement.addEventListener('click', () => toggleEditDeleteOptions(messageElement));
+
     chatBox.appendChild(messageElement);
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
+
+function appendImageMessage(sender, imageUrl) {
+    const chatBox = document.getElementById('chat-box');
+    const messageElement = document.createElement('div');
+    messageElement.classList.add('message', sender);
+
+    const img = document.createElement('img');
+    img.src = sender === 'user' ? '/static/Imagens/pessoapap.jpg' : '/static/Imagens/robopap.jpg';
+    img.alt = sender === 'user' ? 'User' : 'Assistant';
+    messageElement.appendChild(img);
+
+    const image = document.createElement('img');
+    image.src = imageUrl;
+    messageElement.appendChild(image);
+
+    messageElement.addEventListener('click', () => toggleEditDeleteOptions(messageElement));
+
+    chatBox.appendChild(messageElement);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
 
 function toggleEditDeleteOptions(messageElement) {
     let editDeleteContainer = messageElement.querySelector('.edit-delete-container');
@@ -175,12 +218,10 @@ function clearCurrentChatHistory() {
 }
 
 function loadChatHistory() {
-    console.log('Loading chat history');
     const messages = getCurrentChatHistory();
     for (const { sender, message } of messages) {
         if (message === '[imagem]') {
-            // carrega a URL da imagem, se necessário
-            const imageUrl = ''; // substitua com a URL correta, se necessário
+            const imageUrl = ''; // Substitua com a URL correta, se necessário
             appendImageMessage(sender, imageUrl);
         } else {
             appendMessage(sender, message);
@@ -189,8 +230,15 @@ function loadChatHistory() {
 }
 
 function startNewConversation() {
+    const currentChat = getCurrentChatHistory();
+    if (currentChat.length > 0) {
+        const chatHistory = getChatHistory();
+        chatHistory.push({ title: `Conversa em ${new Date().toLocaleString()}`, messages: currentChat });
+        saveChatHistory(chatHistory);
+    }
     clearCurrentChatHistory();
     showNotification('Nova conversa iniciada.');
+    loadConversationList();
 }
 
 function deleteHistory() {
@@ -225,8 +273,7 @@ function showNotification(message) {
 }
 
 function loadConversationList() {
-    console.log('Loading conversation list');
-    const conversationList = JSON.parse(localStorage.getItem('chatHistory')) || [];
+    const conversationList = getChatHistory();
     const conversationListElement = document.getElementById('conversation-list');
     conversationListElement.innerHTML = '';
 
@@ -242,4 +289,13 @@ function loadConversationList() {
 
         conversationListElement.appendChild(conversationElement);
     }
+}
+
+function getChatHistory() {
+    const chatHistory = localStorage.getItem('chatHistory');
+    return chatHistory ? JSON.parse(chatHistory) : [];
+}
+
+function saveChatHistory(chatHistory) {
+    localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
 }
