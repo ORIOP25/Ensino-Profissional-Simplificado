@@ -1,4 +1,6 @@
 [build]
+  command = "npm install --prefix eps-api && npm run build --prefix eps-api"
+  publish = "static"
   functions = "netlify/functions"
 
 [[redirects]]
