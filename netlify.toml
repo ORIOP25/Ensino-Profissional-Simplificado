@@ -5,13 +5,11 @@
   publish = "/opt/build/repo/static"
   publishOrigin = "config"
   functionsDirectory = "/opt/build/repo/netlify/functions"
-  redirects = "from: /*
-      status: 200
-      to: "/index.html"
-      redirectsOrigin = "config"
-  functions = "netlify/functions"
 
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
+[functions]
+  directory = "netlify/functions"
