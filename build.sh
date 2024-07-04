@@ -1,3 +1,4 @@
 #!/bin/sh
-npm install --prefix eps-api
-npm run build --prefix eps-api
+cd eps-api
+npm install
+npm run build
