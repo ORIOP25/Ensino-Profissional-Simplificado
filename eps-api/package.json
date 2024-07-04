@@ -1,7 +1,7 @@
 {
   "name": "papfinal",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "build": "cd eps-api && npm install && npm run build",
     "test": "echo \"Error: no test specified\" && exit 1",
