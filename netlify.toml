@@ -1,23 +1,18 @@
-{
-  "siteInfo": {
-    "id": "533c0dba-00ad-47de-9dfd-ed42dd829ce"
-  },
-  "build": {
-    "command": "npm install --prefix eps-api && npm run build --prefix eps-api",
-    "commandOrigin": "config",
-    "environment": "OPENAI_API_KEY",
-    "publish": "/opt/build/repo/static",
-    "publishOrigin": "config",
-    "functionsDirectory": "/opt/build/repo/netlify/functions"
-  },
-  "redirects": [
-    {
-      "from": "/*",
-      "to": "/index.html",
-      "status": 200
-    }
-  ],
-  "functions": {
-    "directory": "netlify/functions"
-  }
-}
+[siteInfo]
+id = "533c0dba-00ad-47de-9dfd-ed42dd829ce"
+
+[build]
+command = "npm install --prefix eps-api && npm run build --prefix eps-api"
+commandOrigin = "config"
+environment = "OPENAI_API_KEY"
+publish = "/opt/build/repo/static"
+publishOrigin = "config"
+functionsDirectory = "/opt/build/repo/netlify/functions"
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
+
+[functions]
+directory = "netlify/functions"
