@@ -3,10 +3,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('user-input').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') sendMessage();
     });
-    document.getElementById('send-image-btn').addEventListener('click', () => {
-        document.getElementById('image-input').click();
-    });
-    document.getElementById('image-input').addEventListener('change', sendImage);
 
     document.getElementById('new-conversation-btn').addEventListener('click', startNewConversation);
     document.getElementById('clear-current-chat-btn').addEventListener('click', clearCurrentChatHistory);
@@ -46,39 +42,6 @@ async function sendMessage() {
     }
 }
 
-async function sendImage() {
-    const imageInput = document.getElementById('image-input');
-    const file = imageInput.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-        const base64Image = reader.result.replace(/^data:.+;base64,/, '');
-
-        appendImageMessage('user', URL.createObjectURL(file));
-        saveMessage('user', '[imagem]');
-        imageInput.value = '';
-
-        try {
-            const response = await fetch('/eps', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ image: base64Image })
-            });
-
-            if (!response.ok) throw new Error('Network response was not ok');
-
-            const data = await response.json();
-            appendMessage('assistant', data.response);
-            saveMessage('assistant', data.response);
-        } catch (error) {
-            appendMessage('assistant', 'Desculpe, ocorreu um erro. Tente novamente.');
-            saveMessage('assistant', 'Desculpe, ocorreu um erro. Tente novamente.');
-        }
-    };
-    reader.readAsDataURL(file);
-}
-
 function appendMessage(sender, message) {
     const chatBox = document.getElementById('chat-box');
     const messageElement = document.createElement('div');
@@ -92,48 +55,6 @@ function appendMessage(sender, message) {
     const text = document.createElement('div');
     text.textContent = message;
     messageElement.appendChild(text);
-
-    messageElement.addEventListener('click', () => toggleEditDeleteOptions(messageElement));
-
-    chatBox.appendChild(messageElement);
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-function appendImageMessage(sender, imageUrl) {
-    const chatBox = document.getElementById('chat-box');
-    const messageElement = document.createElement('div');
-    messageElement.classList.add('message', sender);
-
-    const img = document.createElement('img');
-    img.src = sender === 'user' ? '/static/Imagens/pessoapap.jpg' : '/static/Imagens/robopap.jpg';
-    img.alt = sender === 'user' ? 'User' : 'Assistant';
-    messageElement.appendChild(img);
-
-    const image = document.createElement('img');
-    image.src = imageUrl;
-    messageElement.appendChild(image);
-
-    messageElement.addEventListener('click', () => toggleEditDeleteOptions(messageElement));
-
-    chatBox.appendChild(messageElement);
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-
-
-function appendImageMessage(sender, imageUrl) {
-    const chatBox = document.getElementById('chat-box');
-    const messageElement = document.createElement('div');
-    messageElement.classList.add('message', sender);
-
-    const img = document.createElement('img');
-    img.src = sender === 'user' ? '/static/Imagens/pessoapap.jpg' : '/static/Imagens/robopap.jpg';
-    img.alt = sender === 'user' ? 'User' : 'Assistant';
-    messageElement.appendChild(img);
-
-    const image = document.createElement('img');
-    image.src = imageUrl;
-    messageElement.appendChild(image);
 
     messageElement.addEventListener('click', () => toggleEditDeleteOptions(messageElement));
 
@@ -221,12 +142,7 @@ function clearCurrentChatHistory() {
 function loadChatHistory() {
     const messages = getCurrentChatHistory();
     for (const { sender, message } of messages) {
-        if (message === '[imagem]') {
-            const imageUrl = ''; // Substitua com a URL correta, se necessário
-            appendImageMessage(sender, imageUrl);
-        } else {
-            appendMessage(sender, message);
-        }
+        appendMessage(sender, message);
     }
 }
 

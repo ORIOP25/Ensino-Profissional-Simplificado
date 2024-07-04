@@ -25,7 +25,6 @@ app.use((req, res, next) => {
 
 const getPythonExecutablePath = () => {
     const venvPathWindows = path.join(__dirname, '..', '.venv', 'Scripts', 'python.exe'); // Windows
-    const venvPathUnix = path.join(__dirname, '..', '.venv', 'bin', 'python'); // Unix/Linux/Mac
 
     if (fs.existsSync(venvPathWindows)) {
         return venvPathWindows;
@@ -62,17 +61,16 @@ const runPythonScript = (scriptPath, args) => {
 };
 
 app.post('/eps', async (req, res) => {
-    const { prompt, image } = req.body;
+    const { prompt } = req.body;
 
-    if (!prompt && !image) {
-        return res.status(400).json({ error: 'Prompt or image is required' });
+    if (!prompt) {
+        return res.status(400).json({ error: 'Prompt is required' });
     }
 
     try {
-        console.log('Received prompt:', prompt || 'Analyze this image:');
-        const scriptPath = image ? path.join(__dirname, 'imagem.py') : path.join(__dirname, 'texto.py');
-        const args = image ? [prompt || 'Analyze this image:', image] : [prompt];
-        const response = await runPythonScript(scriptPath, args);
+        console.log('Received prompt:', prompt);
+        const scriptPath = path.join(__dirname, 'texto.py');
+        const response = await runPythonScript(scriptPath, [prompt]);
         console.log('Sending response:', response);
         res.setHeader('Content-Type', 'application/json; charset=utf-8'); // Adiciona UTF-8
         res.json({ response });
@@ -88,5 +86,5 @@ app.get('/', (req, res) => {
 });
 
 app.listen(port, () => {
-    console.log(`EPS API server running at http://localhost:${port}`);
+    console.log(`EPS API server running at 'http://localhost:${port}'`);
 });
