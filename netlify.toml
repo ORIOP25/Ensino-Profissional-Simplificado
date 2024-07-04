@@ -1,6 +1,14 @@
 [build]
   command = "npm install --prefix eps-api && npm run build --prefix eps-api"
-  publish = "static"
+  commandOrigin = "config"
+  environment = "OPENAI_API_KEY"
+  publish = "/opt/build/repo/static"
+  publishOrigin: "config"
+  functionsDirectory: /opt/build/repo/netlify/functions
+  redirects: from: /*
+      status: 200
+      to: /index.html
+      redirectsOrigin: config
   functions = "netlify/functions"
 
 [[redirects]]
