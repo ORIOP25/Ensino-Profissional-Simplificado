@@ -2,7 +2,7 @@
 id = "533c0dba-00ad-47de-9dfd-ed42dd829ce"
 
 [build]
-command = "./build.sh"
+command = "npm run build"
 commandOrigin = "config"
 publish = "/opt/build/repo/static"
 publishOrigin = "config"
