@@ -2,7 +2,10 @@
 id = "533c0dba-00ad-47de-9dfd-ed42dd829ce"
 
 [build]
-command = "npm install --prefix eps-api && npm run build --prefix eps-api"
+command = """
+npm install --prefix eps-api
+npm run build --prefix eps-api
+"""
 commandOrigin = "config"
 publish = "/opt/build/repo/static"
 publishOrigin = "config"
