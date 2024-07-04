@@ -7,7 +7,7 @@
   functionsDirectory = "/opt/build/repo/netlify/functions"
   redirects = "from: /*
       status: 200
-      to: /index.html"
+      to: "/index.html"
       redirectsOrigin = "config"
   functions = "netlify/functions"
 
