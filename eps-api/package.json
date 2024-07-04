@@ -3,7 +3,14 @@
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
-    "build": "cd eps-api && npm install && npm run build",
+    "build": "npm run build",
+    "commandOrigin": "config",
+    "environment": "OPENAI_API_KEY",
+    "publish": "/opt/build/repo/static",
+    "publishOrigin": "config",
+    "functionsDirectory": "/opt/build/repo/netlify/functions",
+    "redirects": "from: /*\nstatus: 200\nto: /index.html",
+    "redirectsOrigin": "config",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
   },
