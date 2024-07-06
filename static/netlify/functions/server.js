@@ -3,8 +3,8 @@ const path = require("path");
 const fs = require("fs");
 
 const getPythonExecutablePath = () => {
-    const venvPathWindows = path.join(__dirname, '..', '..', '.venv', 'Scripts', 'python.exe'); // Windows
-    const venvPathUnix = path.join(__dirname, '..', '..', '.venv', 'bin', 'python'); // Unix
+    const venvPathWindows = path.join(__dirname, '..', '..', '..', '.venv', 'Scripts', 'python.exe'); // Windows
+    const venvPathUnix = path.join(__dirname, '..', '..', '..', '.venv', 'bin', 'python'); // Unix
 
     if (fs.existsSync(venvPathWindows)) {
         return venvPathWindows;
@@ -69,7 +69,7 @@ exports.handler = async (event, context) => {
     }
 
     try {
-        const scriptPath = path.join(__dirname, 'texto.py'); // Certifique-se que o caminho está correto
+        const scriptPath = path.join(__dirname, '..', '..', '..', 'texto.py'); // Certifique-se que o caminho está correto
         const response = await runPythonScript(scriptPath, [prompt]);
         return {
             statusCode: 200,
