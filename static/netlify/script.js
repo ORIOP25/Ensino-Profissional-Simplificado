@@ -25,7 +25,7 @@ async function sendMessage() {
     inputField.value = '';
 
     try {
-        const response = await fetch('/eps', {
+        const response = await fetch('/.netlify/functions/eps', {  // Atualizado o endpoint
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ prompt: message })
@@ -34,9 +34,11 @@ async function sendMessage() {
         if (!response.ok) throw new Error('Network response was not ok');
         
         const data = await response.json();
+        console.log('Response from API:', data);  // Log de depuração
         appendMessage('assistant', data.response);
         saveMessage('assistant', data.response);
     } catch (error) {
+        console.error('Error:', error);  // Log de erro
         appendMessage('assistant', 'Desculpe, ocorreu um erro. Tente novamente.');
         saveMessage('assistant', 'Desculpe, ocorreu um erro. Tente novamente.');
     }
@@ -61,6 +63,9 @@ function appendMessage(sender, message) {
     chatBox.appendChild(messageElement);
     chatBox.scrollTop = chatBox.scrollHeight;
 }
+
+// Resto do código permanece o mesmo...
+
 
 function toggleEditDeleteOptions(messageElement) {
     let editDeleteContainer = messageElement.querySelector('.edit-delete-container');
