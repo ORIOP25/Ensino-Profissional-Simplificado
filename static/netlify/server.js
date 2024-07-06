@@ -69,7 +69,7 @@ exports.handler = async (event, context) => {
     }
 
     try {
-        const scriptPath = path.join(__dirname, '..', '..', 'texto.py');
+        const scriptPath = path.join(__dirname, 'texto.py'); // Certifique-se que o caminho está correto
         const response = await runPythonScript(scriptPath, [prompt]);
         return {
             statusCode: 200,
@@ -77,7 +77,7 @@ exports.handler = async (event, context) => {
                 'Content-Type': 'application/json; charset=utf-8',
                 'Access-Control-Allow-Origin': '*'
             },
-            body: JSON.stringify({ response })
+            body: JSON.stringify({ response: response.trim() }) // Remover espaços extras na resposta
         };
     } catch (error) {
         console.error('Error in /eps endpoint:', error);

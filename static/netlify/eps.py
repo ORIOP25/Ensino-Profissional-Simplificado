@@ -1,19 +1,13 @@
 import json
-from openai import OpenAI
 import os
+import sys
+from openai import OpenAI
 
-def handler(event, context):
+def main(prompt):
     try:
-        # Configurar a codificação UTF-8
-        sys.stdout.reconfigure(encoding='utf-8')
-
         # Configurar a chave da API e o modelo
         client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         MODEL = "gpt-4o"
-
-        # Obter o prompt do corpo da solicitação
-        body = json.loads(event['body'])
-        prompt = body.get('prompt', '')
 
         # Criar a conclusão do chat
         response = client.chat.completions.create(
@@ -25,13 +19,13 @@ def handler(event, context):
         )
 
         # Retornar a resposta como JSON
-        return {
-            'statusCode': 200,
-            'body': json.dumps({'response': response.choices[0].message.content.strip()})
-        }
+        print(json.dumps({'response': response.choices[0].message.content.strip()}))
 
     except Exception as e:
-        return {
-            'statusCode': 500,
-            'body': json.dumps({'error': str(e)})
-        }
+        print(json.dumps({'error': str(e)}), file=sys.stderr)
+
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        main(sys.argv[1])
+    else:
+        print(json.dumps({'error': 'No prompt provided'}), file=sys.stderr)
