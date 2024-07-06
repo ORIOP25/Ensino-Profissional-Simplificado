@@ -9,7 +9,7 @@ def handler(event, context):
 
         # Configurar a chave da API e o modelo
         client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        MODEL = "gpt-4"
+        MODEL = "gpt-4o"
 
         # Obter o prompt do corpo da solicitação
         body = json.loads(event['body'])
