@@ -1,98 +1,102 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Event listeners para botões e input
     document.getElementById('send-btn').addEventListener('click', sendMessage);
     document.getElementById('user-input').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') sendMessage();
     });
-
     document.getElementById('new-conversation-btn').addEventListener('click', startNewConversation);
     document.getElementById('clear-history-btn').addEventListener('click', clearCurrentChatHistory);
     document.getElementById('delete-history-btn').addEventListener('click', deleteHistory);
     document.getElementById('toggle-theme-btn').addEventListener('click', toggleTheme);
 
+    // Carregar tema salvo e histórico ao carregar a página
     applySavedTheme();
     loadChatHistory();
     loadConversationList();
 });
 
-async function sendMessage() {
-    const inputField = document.getElementById('user-input');
-    const message = inputField.value.trim();
-
+// Função para enviar mensagem
+function sendMessage() {
+    const message = document.getElementById('user-input').value.trim();
     if (!message) return;
-
     appendMessage('user', message);
     saveMessage('user', message);
-    inputField.value = '';
-
-    try {
-        const response = await fetch('/.netlify/functions/eps', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: message })
-        });
-
-        if (!response.ok) throw new Error('Network response was not ok');
-        
-        const data = await response.json();
-        console.log('Response from API:', data);
-        appendMessage('assistant', data.response);
-        saveMessage('assistant', data.response);
-    } catch (error) {
-        console.error('Error:', error);
-        appendMessage('assistant', 'Desculpe, ocorreu um erro. Tente novamente.');
-        saveMessage('assistant', 'Desculpe, ocorreu um erro. Tente novamente.');
-    }
+    simulateAssistantResponse(); // Simular resposta do assistente (pode ser substituído pela chamada à API real)
 }
 
+// Função para adicionar mensagem ao chat
 function appendMessage(sender, message) {
     const chatBox = document.getElementById('chat-box');
+    const messageElement = createMessageElement(sender, message);
+    chatBox.appendChild(messageElement);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// Função para criar elemento de mensagem
+function createMessageElement(sender, message) {
     const messageElement = document.createElement('div');
     messageElement.classList.add('message', sender);
 
-    const img = document.createElement('img');
-    img.src = sender === 'user' ? '/static/Imagens/pessoapap.jpg' : '/static/Imagens/robopap.jpg';
-    img.alt = sender === 'user' ? 'User' : 'Assistant';
+    const img = createAvatar(sender);
+    img.addEventListener('click', () => toggleEditDeleteOptions(messageElement));
     messageElement.appendChild(img);
 
     const text = document.createElement('div');
     text.textContent = message;
     messageElement.appendChild(text);
 
-    messageElement.addEventListener('click', () => toggleEditDeleteOptions(messageElement));
-
-    chatBox.appendChild(messageElement);
-    chatBox.scrollTop = chatBox.scrollHeight;
+    return messageElement;
 }
 
+// Função para criar avatar de usuário ou assistente
+function createAvatar(sender) {
+    const img = document.createElement('img');
+    img.src = sender === 'user' ? '/static/Imagens/pessoapap.jpg' : '/static/Imagens/robopap.jpg';
+    img.alt = sender === 'user' ? 'User' : 'Assistant';
+    img.classList.add('avatar');
+    return img;
+}
+
+// Função para mostrar/ocultar opções de editar/excluir mensagem
 function toggleEditDeleteOptions(messageElement) {
     let editDeleteContainer = messageElement.querySelector('.edit-delete-container');
     if (editDeleteContainer) {
         editDeleteContainer.remove();
     } else {
-        editDeleteContainer = document.createElement('div');
-        editDeleteContainer.classList.add('edit-delete-container');
-
-        const timestamp = document.createElement('div');
-        timestamp.classList.add('message-timestamp');
-        timestamp.textContent = new Date().toLocaleTimeString();
-        editDeleteContainer.appendChild(timestamp);
-
-        const editButton = document.createElement('button');
-        editButton.textContent = 'Editar';
-        editButton.classList.add('btn');
-        editButton.addEventListener('click', () => editMessage(messageElement));
-        editDeleteContainer.appendChild(editButton);
-
-        const deleteButton = document.createElement('button');
-        deleteButton.textContent = 'Excluir';
-        deleteButton.classList.add('btn');
-        deleteButton.addEventListener('click', () => deleteMessage(messageElement));
-        editDeleteContainer.appendChild(deleteButton);
-
+        editDeleteContainer = createEditDeleteContainer();
         messageElement.appendChild(editDeleteContainer);
     }
 }
 
+// Função para criar contêiner de opções de editar/excluir mensagem
+function createEditDeleteContainer() {
+    const editDeleteContainer = document.createElement('div');
+    editDeleteContainer.classList.add('edit-delete-container');
+
+    const timestamp = document.createElement('div');
+    timestamp.classList.add('message-timestamp');
+    timestamp.textContent = new Date().toLocaleTimeString();
+    editDeleteContainer.appendChild(timestamp);
+
+    const editButton = createButton('Editar', () => editMessage());
+    editDeleteContainer.appendChild(editButton);
+
+    const deleteButton = createButton('Excluir', () => deleteMessage());
+    editDeleteContainer.appendChild(deleteButton);
+
+    return editDeleteContainer;
+}
+
+// Função para criar botão com texto e função de callback
+function createButton(text, callback) {
+    const button = document.createElement('button');
+    button.textContent = text;
+    button.classList.add('btn');
+    button.addEventListener('click', callback);
+    return button;
+}
+
+// Função para editar mensagem
 async function editMessage(messageElement) {
     const messageText = messageElement.querySelector('div:not(.edit-delete-container)').textContent;
     const newMessage = prompt('Editar mensagem:', messageText);
@@ -109,38 +113,47 @@ async function editMessage(messageElement) {
     }
 }
 
+// Função para excluir mensagem
 async function deleteMessage(messageElement) {
-    const chatBox = document.getElementById('chat-box');
-    const messageIndex = Array.from(chatBox.children).indexOf(messageElement);
+    const confirmation = confirm('Tem certeza que deseja excluir esta mensagem?');
+    if (confirmation) {
+        const chatBox = document.getElementById('chat-box');
+        const messageIndex = Array.from(chatBox.children).indexOf(messageElement);
 
-    const messages = getCurrentChatHistory();
-    messages.splice(messageIndex, 1);
-    saveCurrentChatHistory(messages);
+        const messages = getCurrentChatHistory();
+        messages.splice(messageIndex, 1);
+        saveCurrentChatHistory(messages);
 
-    messageElement.remove();
+        messageElement.remove();
+    }
 }
 
+// Função para salvar mensagem no histórico local
 function saveMessage(sender, message) {
     const messages = getCurrentChatHistory();
     messages.push({ sender, message });
     saveCurrentChatHistory(messages);
 }
 
+// Função para obter histórico atual do chat
 function getCurrentChatHistory() {
     const currentChat = localStorage.getItem('currentChat');
     return currentChat ? JSON.parse(currentChat) : [];
 }
 
+// Função para salvar histórico atual do chat no armazenamento local
 function saveCurrentChatHistory(messages) {
     localStorage.setItem('currentChat', JSON.stringify(messages));
 }
 
+// Função para limpar histórico atual do chat
 function clearCurrentChatHistory() {
     localStorage.removeItem('currentChat');
     document.getElementById('chat-box').innerHTML = '';
     showNotification('Histórico de chat limpo.');
 }
 
+// Função para carregar histórico do chat ao iniciar
 function loadChatHistory() {
     const messages = getCurrentChatHistory();
     for (const { sender, message } of messages) {
@@ -148,6 +161,7 @@ function loadChatHistory() {
     }
 }
 
+// Função para iniciar nova conversa
 function startNewConversation() {
     const currentChat = getCurrentChatHistory();
     if (currentChat.length > 0) {
@@ -160,12 +174,14 @@ function startNewConversation() {
     loadConversationList();
 }
 
+// Função para excluir histórico completo
 function deleteHistory() {
     localStorage.removeItem('chatHistory');
     document.getElementById('conversation-list').innerHTML = '';
     showNotification('Histórico excluído.');
 }
 
+// Função para alternar entre temas claro e escuro
 function toggleTheme() {
     const body = document.body;
     body.classList.toggle('dark-mode');
@@ -173,6 +189,7 @@ function toggleTheme() {
     showNotification('Tema alterado.');
 }
 
+// Função para aplicar tema salvo ao carregar página
 function applySavedTheme() {
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') {
@@ -182,6 +199,7 @@ function applySavedTheme() {
     }
 }
 
+// Função para exibir notificação por determinado tempo
 function showNotification(message) {
     const notificationElement = document.getElementById('notification');
     notificationElement.textContent = message;
@@ -191,6 +209,7 @@ function showNotification(message) {
     }, 3000);
 }
 
+// Função para carregar lista de conversas antigas
 function loadConversationList() {
     const conversationList = getChatHistory();
     const conversationListElement = document.getElementById('conversation-list');
@@ -204,17 +223,27 @@ function loadConversationList() {
             localStorage.setItem('currentChat', JSON.stringify(conversation.messages));
             loadChatHistory();
             showNotification('Conversa carregada.');
+            clearConversationListSelection();
+            conversationElement.classList.add('selected');
         });
 
         conversationListElement.appendChild(conversationElement);
     }
 }
 
+// Função para obter histórico completo de conversas antigas
 function getChatHistory() {
     const chatHistory = localStorage.getItem('chatHistory');
     return chatHistory ? JSON.parse(chatHistory) : [];
 }
 
+// Função para salvar histórico completo de conversas antigas no armazenamento local
 function saveChatHistory(chatHistory) {
     localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+}
+
+// Função para limpar a seleção anterior na lista de conversas
+function clearConversationListSelection() {
+    const conversationItems = document.querySelectorAll('.conversation-item');
+    conversationItems.forEach(item => item.classList.remove('selected'));
 }

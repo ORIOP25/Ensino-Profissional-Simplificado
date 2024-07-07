@@ -81,6 +81,11 @@
             font-size: 0.9em;
             border-radius: 10px;
         }
+        .conversation-item {
+            cursor: pointer;
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+        }
     </style>
 </head>
 <body>
@@ -94,9 +99,6 @@
             <ul id="conversation-list"></ul>
         </aside>
         <main class="chat-container">
-            <header class="chat-header">
-                <h1>EPS - Ensino Profissional Simplificado</h1>
-            </header>
             <section id="chat-box" class="chat-box"></section>
             <div class="chat-input">
                 <input type="text" id="user-input" placeholder="Digite sua pergunta aqui..." />
