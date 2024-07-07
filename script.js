@@ -15,13 +15,23 @@ document.addEventListener('DOMContentLoaded', () => {
     loadConversationList();
 });
 
-// Função para enviar mensagem
-function sendMessage() {
+// Função para enviar mensagem para o backend
+async function sendMessage() {
     const message = document.getElementById('user-input').value.trim();
     if (!message) return;
-    appendMessage('user', message);
-    saveMessage('user', message);
-    simulateAssistantResponse(); // Simular resposta do assistente (pode ser substituído pela chamada à API real)
+
+    try {
+        const response = await axios.post('/eps', { prompt: message });
+        const assistantResponse = response.data.response;
+        appendMessage('user', message);
+        appendMessage('assistant', assistantResponse);
+        saveMessage('assistant', assistantResponse); // Salvar mensagem do assistente no histórico
+    } catch (error) {
+        console.error('Erro ao enviar mensagem:', error);
+        showNotification('Erro ao enviar mensagem.');
+    }
+
+    document.getElementById('user-input').value = ''; // Limpar campo de entrada
 }
 
 // Função para adicionar mensagem ao chat
@@ -97,7 +107,8 @@ function createButton(text, callback) {
 }
 
 // Função para editar mensagem
-async function editMessage(messageElement) {
+async function editMessage() {
+    const messageElement = this.closest('.message');
     const messageText = messageElement.querySelector('div:not(.edit-delete-container)').textContent;
     const newMessage = prompt('Editar mensagem:', messageText);
 
@@ -114,7 +125,8 @@ async function editMessage(messageElement) {
 }
 
 // Função para excluir mensagem
-async function deleteMessage(messageElement) {
+async function deleteMessage() {
+    const messageElement = this.closest('.message');
     const confirmation = confirm('Tem certeza que deseja excluir esta mensagem?');
     if (confirmation) {
         const chatBox = document.getElementById('chat-box');
