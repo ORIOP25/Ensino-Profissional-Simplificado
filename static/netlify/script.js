@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('new-conversation-btn').addEventListener('click', startNewConversation);
-    document.getElementById('clear-current-chat-btn').addEventListener('click', clearCurrentChatHistory);
+    document.getElementById('clear-history-btn').addEventListener('click', clearCurrentChatHistory);
     document.getElementById('delete-history-btn').addEventListener('click', deleteHistory);
     document.getElementById('toggle-theme-btn').addEventListener('click', toggleTheme);
 
@@ -25,7 +25,7 @@ async function sendMessage() {
     inputField.value = '';
 
     try {
-        const response = await fetch('/.netlify/functions/eps', {  // Atualizado o endpoint
+        const response = await fetch('/.netlify/functions/eps', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ prompt: message })
@@ -34,11 +34,11 @@ async function sendMessage() {
         if (!response.ok) throw new Error('Network response was not ok');
         
         const data = await response.json();
-        console.log('Response from API:', data);  // Log de depuração
+        console.log('Response from API:', data);
         appendMessage('assistant', data.response);
         saveMessage('assistant', data.response);
     } catch (error) {
-        console.error('Error:', error);  // Log de erro
+        console.error('Error:', error);
         appendMessage('assistant', 'Desculpe, ocorreu um erro. Tente novamente.');
         saveMessage('assistant', 'Desculpe, ocorreu um erro. Tente novamente.');
     }
@@ -63,7 +63,6 @@ function appendMessage(sender, message) {
     chatBox.appendChild(messageElement);
     chatBox.scrollTop = chatBox.scrollHeight;
 }
-
 
 function toggleEditDeleteOptions(messageElement) {
     let editDeleteContainer = messageElement.querySelector('.edit-delete-container');
