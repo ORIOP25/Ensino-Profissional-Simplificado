@@ -4,7 +4,6 @@ const fs = require("fs");
 
 const getPythonExecutablePath = () => {
     const venvPathWindows = path.join(__dirname, '..', '..', '..', '.venv', 'Scripts', 'python.exe'); // Windows
-    const venvPathUnix = path.join(__dirname, '..', '..', '..', '.venv', 'bin', 'python'); // Unix
 
     if (fs.existsSync(venvPathWindows)) {
         return venvPathWindows;
