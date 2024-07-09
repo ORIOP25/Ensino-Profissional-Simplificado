@@ -1,9 +1,31 @@
-const { spawn } = require("child_process");
+const express = require("express");
+const bodyParser = require("body-parser");
 const path = require("path");
+const { spawn } = require("child_process");
 const fs = require("fs");
+require("dotenv").config();
+
+const app = express();
+const port = 3000;
+
+app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, '..', 'static')));
+
+// Adicionando CORS
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+});
+
+app.use((req, res, next) => {
+    console.log(Request URL: ${req.url});
+    next();
+});
 
 const getPythonExecutablePath = () => {
-    const venvPathWindows = path.join(__dirname, '..', '..', '..', '.venv', 'Scripts', 'python.exe'); // Windows
+    const venvPathWindows = path.join(__dirname, '..', '.venv', 'Scripts', 'python.exe'); // Windows
+    const venvPathUnix = path.join(__dirname, '..', '.venv', 'bin', 'python'); // Unix/Linux/Mac
 
     if (fs.existsSync(venvPathWindows)) {
         return venvPathWindows;
@@ -25,7 +47,7 @@ const runPythonScript = (scriptPath, args) => {
         });
 
         pyProg.stderr.on('data', (stderr) => {
-            console.error(`stderr: ${stderr}`);
+            console.error(stderr: ${stderr});
             reject(stderr.toString());
         });
 
@@ -33,56 +55,37 @@ const runPythonScript = (scriptPath, args) => {
             if (code === 0) {
                 resolve(data);
             } else {
-                reject(`child process exited with code ${code}`);
+                reject(child process exited with code ${code});
             }
         });
     });
 };
 
-exports.handler = async (event, context) => {
-    if (event.httpMethod === 'OPTIONS') {
-        return {
-            statusCode: 200,
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type',
-                'Access-Control-Allow-Methods': 'POST, OPTIONS'
-            }
-        };
-    }
-
-    if (event.httpMethod !== 'POST') {
-        return {
-            statusCode: 405,
-            body: 'Method Not Allowed'
-        };
-    }
-
-    const { prompt } = JSON.parse(event.body);
+app.post('/eps', async (req, res) => {
+    const { prompt } = req.body;
 
     if (!prompt) {
-        return {
-            statusCode: 400,
-            body: JSON.stringify({ error: 'Prompt is required' })
-        };
+        return res.status(400).json({ error: 'Prompt is required' });
     }
 
     try {
-        const scriptPath = path.join(__dirname, '..', '..', '..', 'texto.py'); // Certifique-se que o caminho está correto
+        console.log('Received prompt:', prompt);
+        const scriptPath = path.join(__dirname, 'testeAPI.py');
         const response = await runPythonScript(scriptPath, [prompt]);
-        return {
-            statusCode: 200,
-            headers: {
-                'Content-Type': 'application/json; charset=utf-8',
-                'Access-Control-Allow-Origin': '*'
-            },
-            body: JSON.stringify({ response: response.trim() }) // Remover espaços extras na resposta
-        };
+        console.log('Sending response:', response);
+        res.setHeader('Content-Type', 'application/json; charset=utf-8'); // Adiciona UTF-8
+        res.json({ response });
     } catch (error) {
         console.error('Error in /eps endpoint:', error);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ error: 'Failed to get response from EPS model' })
-        };
+        res.status(500).json({ error: 'Failed to get response from EPS model' });
     }
-};
+});
+
+app.get('/', (req, res) => {
+    console.log('Serving index.html');
+    res.sendFile(path.join(__dirname, '..', 'static', 'index.html'));
+});
+
+app.listen(port, () => {
+    console.log(EPS API server running at 'http://localhost:${port}');
+});
