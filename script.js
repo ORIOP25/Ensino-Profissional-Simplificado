@@ -1,8 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Event listeners para botões e input
-    document.getElementById('send-btn').addEventListener('click', sendMessageToBackend);
+    document.getElementById('send-btn').addEventListener('click', sendMessage);
     document.getElementById('user-input').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendMessageToBackend();
+        if (e.key === 'Enter') sendMessage();
     });
     document.getElementById('new-conversation-btn').addEventListener('click', startNewConversation);
     document.getElementById('clear-history-btn').addEventListener('click', clearCurrentChatHistory);
