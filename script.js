@@ -7,10 +7,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('new-conversation-btn').addEventListener('click', startNewConversation);
     document.getElementById('delete-history-btn').addEventListener('click', deleteHistory);
     document.getElementById('toggle-theme-btn').addEventListener('click', toggleTheme);
-    document.getElementById('send-image-btn').addEventListener('click', () => {
-        document.getElementById('image-input').click();
-    });
-    document.getElementById('image-input').addEventListener('change', sendImage);
 
     loadChatHistory();
     loadConversationList();
@@ -44,45 +40,13 @@ async function sendMessage() {
     }
 }
 
-async function sendImage() {
-    const imageInput = document.getElementById('image-input');
-    const file = imageInput.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = async () => {
-        const imageUrl = reader.result;
-        appendImageMessage('user', imageUrl);
-        imageInput.value = '';
-        showNotification('Imagem enviada!');
-
-        try {
-            const response = await fetch('/netlify/functions/eps.js', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: '[imagem]', image: imageUrl })
-            });
-
-            if (!response.ok) throw new Error('Network response was not ok');
-            
-            const data = await response.json();
-            appendMessage('assistant', data.response);
-        } catch (error) {
-            appendMessage('assistant', 'Desculpe, ocorreu um erro. Tente novamente.');
-            showNotification('Erro de rede. Tente novamente.');
-        }
-    };
-    reader.readAsDataURL(file);
-
-}
-
 function appendMessage(sender, message) {
     const chatBox = document.getElementById('chat-box');
     const messageElement = document.createElement('div');
     messageElement.classList.add('message', sender);
 
     const img = document.createElement('img');
-    img.src = sender === 'user' ? '"/static/Imagens/pessoapap.jpg"' : '"/static/Imagens/robopap.jpg"';
+    img.src = sender === 'user' ? '/static/Imagens/pessoapap.jpg' : '/static/Imagens/robopap.jpg';
     img.alt = sender === 'user' ? 'User' : 'Assistant';
     messageElement.appendChild(img);
 
@@ -102,34 +66,6 @@ function appendMessage(sender, message) {
     chatBox.scrollTop = chatBox.scrollHeight;
 
     saveMessage(sender, message);
-}
-
-function appendImageMessage(sender, imageUrl) {
-    const chatBox = document.getElementById('chat-box');
-    const messageElement = document.createElement('div');
-    messageElement.classList.add('message', sender);
-
-    const img = document.createElement('img');
-    img.src = sender === 'user' ? '/path/to/user-image.jpg' : '/path/to/assistant-image.jpg';
-    img.alt = sender === 'user' ? 'User' : 'Assistant';
-    messageElement.appendChild(img);
-
-    const image = document.createElement('img');
-    image.src = imageUrl;
-    messageElement.appendChild(image);
-
-    if (sender === 'user') {
-        const settingsButton = document.createElement('button');
-        settingsButton.innerHTML = '⚙';
-        settingsButton.classList.add('settings-btn');
-        settingsButton.addEventListener('click', () => toggleEditDeleteOptions(messageElement));
-        messageElement.appendChild(settingsButton);
-    }
-
-    chatBox.appendChild(messageElement);
-    chatBox.scrollTop = chatBox.scrollHeight;
-
-    saveMessage(sender, '[imagem]');
 }
 
 function toggleEditDeleteOptions(messageElement) {
@@ -207,19 +143,6 @@ function clearCurrentChatHistory() {
     localStorage.removeItem('currentChat');
     document.getElementById('chat-box').innerHTML = '';
     showNotification('Histórico de chat limpo.');
-}
-
-function loadChatHistory() {
-    const messages = getCurrentChatHistory();
-    for (const { sender, message } of messages) {
-        if (message === '[imagem]') {
-            // carrega a URL da imagem, se necessário
-            const imageUrl = ''; // substitua com a URL correta, se necessário
-            appendImageMessage(sender, imageUrl);
-        } else {
-            appendMessage(sender, message);
-        }
-    }
 }
 
 function startNewConversation() {
