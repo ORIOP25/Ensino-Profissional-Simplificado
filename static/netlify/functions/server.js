@@ -70,7 +70,7 @@ app.post('/eps', async (req, res) => {
 
     try {
         console.log('Received prompt:', prompt);
-        const scriptPath = path.join(__dirname, 'testeAPI.py');
+        const scriptPath = path.join(__dirname, 'eps.js');
         const response = await runPythonScript(scriptPath, [prompt]);
         console.log('Sending response:', response);
         res.setHeader('Content-Type', 'application/json; charset=utf-8'); // Adiciona UTF-8
@@ -87,5 +87,5 @@ app.get('/', (req, res) => {
 });
 
 app.listen(port, () => {
-    console.log(EPS API server running at 'http://localhost:${port}');
+    console.log(EPS API server running at 'https://ensinoprofissionalsimplificado.netlify.app');
 });
