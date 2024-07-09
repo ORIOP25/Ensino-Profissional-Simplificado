@@ -1,8 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Event listeners para botões e input
-    document.getElementById('send-btn').addEventListener('click', sendMessage);
+    document.getElementById('send-btn').addEventListener('click', sendMessageToBackend);
     document.getElementById('user-input').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendMessage();
+        if (e.key === 'Enter') sendMessageToBackend();
     });
     document.getElementById('new-conversation-btn').addEventListener('click', startNewConversation);
     document.getElementById('clear-history-btn').addEventListener('click', clearCurrentChatHistory);
@@ -16,12 +16,22 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Função para enviar mensagem
-function sendMessage() {
+async function sendMessageToBackend() {
     const message = document.getElementById('user-input').value.trim();
     if (!message) return;
-    appendMessage('user', message);
-    saveMessage('user', message);
-    simulateAssistantResponse(); // Simular resposta do assistente (pode ser substituído pela chamada à API real)
+
+    try {
+        const response = await axios.post('/eps', { prompt: message });
+        const assistantResponse = response.data.response;
+        appendMessage('user', message);
+        appendMessage('assistant', assistantResponse);
+        saveMessage('assistant', assistantResponse); // Salvar mensagem do assistente no histórico
+    } catch (error) {
+        console.error('Erro ao enviar mensagem:', error);
+        showNotification('Erro ao enviar mensagem.');
+    }
+
+    document.getElementById('user-input').value = ''; // Limpar campo de entrada
 }
 
 // Função para adicionar mensagem ao chat
