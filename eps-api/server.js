@@ -19,7 +19,7 @@ app.use((req, res, next) => {
 });
 
 app.use((req, res, next) => {
-    console.log(Request URL: ${req.url});
+    console.log(`Request URL: ${req.url}`);
     next();
 });
 
@@ -39,7 +39,7 @@ const getPythonExecutablePath = () => {
 const runPythonScript = (scriptPath, args) => {
     return new Promise((resolve, reject) => {
         const pythonExecutable = getPythonExecutablePath();
-        const pyProg = spawn(pythonExecutable, [scriptPath].concat(args));
+        const pyProg = spawn(pythonExecutable, [scriptPath].concat(args), { encoding: 'utf8' });
 
         let data = '';
         pyProg.stdout.on('data', (stdout) => {
@@ -47,7 +47,7 @@ const runPythonScript = (scriptPath, args) => {
         });
 
         pyProg.stderr.on('data', (stderr) => {
-            console.error(stderr: ${stderr});
+            console.error(`stderr: ${stderr}`);
             reject(stderr.toString());
         });
 
@@ -55,7 +55,7 @@ const runPythonScript = (scriptPath, args) => {
             if (code === 0) {
                 resolve(data);
             } else {
-                reject(child process exited with code ${code});
+                reject(`child process exited with code ${code}`);
             }
         });
     });
@@ -70,11 +70,12 @@ app.post('/eps', async (req, res) => {
 
     try {
         console.log('Received prompt:', prompt);
-        const scriptPath = path.join(__dirname, 'eps.js');
+        const scriptPath = path.join(__dirname, 'eps.py');
         const response = await runPythonScript(scriptPath, [prompt]);
         console.log('Sending response:', response);
-        res.setHeader('Content-Type', 'application/json; charset=utf-8'); // Adiciona UTF-8
-        res.json({ response });
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8'); // Definir conteúdo como texto puro e charset UTF-8
+        const responseData = JSON.parse(response);
+        res.send(responseData.response); // Enviar apenas a resposta
     } catch (error) {
         console.error('Error in /eps endpoint:', error);
         res.status(500).json({ error: 'Failed to get response from EPS model' });
@@ -87,5 +88,5 @@ app.get('/', (req, res) => {
 });
 
 app.listen(port, () => {
-    console.log(EPS API server running at 'https://ensinoprofissionalsimplificado.netlify.app');
+    console.log(`EPS API server running at http://localhost:${port}`);
 });

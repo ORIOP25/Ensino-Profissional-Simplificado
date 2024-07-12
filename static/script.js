@@ -31,16 +31,18 @@ async function sendMessage() {
         });
 
         if (!response.ok) throw new Error('Network response was not ok');
-        
-        const data = await response.json();
-        appendMessage('assistant', data.response);
+
+        const data = await response.text(); // Recebe a resposta como texto puro
+        appendMessage('assistant', data);
+        saveMessage('assistant', data); // Salvar mensagem do assistente no histórico
     } catch (error) {
+        console.error('Erro ao enviar mensagem:', error);
         appendMessage('assistant', 'Desculpe, ocorreu um erro. Tente novamente.');
         showNotification('Erro de rede. Tente novamente.');
     }
 }
 
-function appendMessage(sender, message) {
+function appendMessage(sender, message, save = true) {
     const chatBox = document.getElementById('chat-box');
     const messageElement = document.createElement('div');
     messageElement.classList.add('message', sender);
@@ -65,7 +67,7 @@ function appendMessage(sender, message) {
     chatBox.appendChild(messageElement);
     chatBox.scrollTop = chatBox.scrollHeight;
 
-    saveMessage(sender, message);
+    if (save) saveMessage(sender, message);
 }
 
 function toggleEditDeleteOptions(messageElement) {
@@ -128,6 +130,7 @@ function saveMessage(sender, message) {
     const messages = getCurrentChatHistory();
     messages.push({ sender, message });
     saveCurrentChatHistory(messages);
+    updateConversationList(); // Atualizar a lista de conversas ao salvar mensagem
 }
 
 function getCurrentChatHistory() {
@@ -146,12 +149,22 @@ function clearCurrentChatHistory() {
 }
 
 function startNewConversation() {
+    const messages = getCurrentChatHistory();
+    const chatHistory = JSON.parse(localStorage.getItem('chatHistory')) || [];
+
+    if (messages.length > 0) {
+        chatHistory.push({ title: `Conversa ${chatHistory.length + 1}`, messages });
+        localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+    }
+
     clearCurrentChatHistory();
     showNotification('Nova conversa iniciada.');
+    loadConversationList();
 }
 
 function deleteHistory() {
     localStorage.removeItem('chatHistory');
+    localStorage.removeItem('currentChat');
     document.getElementById('conversation-list').innerHTML = '';
     showNotification('Histórico excluído.');
 }
@@ -186,10 +199,39 @@ function loadConversationList() {
     const conversationListElement = document.getElementById('conversation-list');
     conversationListElement.innerHTML = '';
 
-    for (const conversation of conversationList) {
+    for (const [index, conversation] of conversationList.entries()) {
         const conversationElement = document.createElement('div');
         conversationElement.classList.add('conversation-item');
-        conversationElement.textContent = conversation.title || 'Conversa sem título';
+        conversationElement.textContent = conversation.title || `Conversa ${index + 1}`;
+        conversationElement.addEventListener('click', () => {
+            localStorage.setItem('currentChat', JSON.stringify(conversation.messages));
+            loadChatHistory();
+            showNotification('Conversa carregada.');
+        });
+
+        conversationListElement.appendChild(conversationElement);
+    }
+}
+
+function loadChatHistory() {
+    const chatBox = document.getElementById('chat-box');
+    const messages = getCurrentChatHistory();
+
+    chatBox.innerHTML = '';
+    messages.forEach(({ sender, message }) => {
+        appendMessage(sender, message, false); // Evita salvar mensagens ao carregar o histórico
+    });
+}
+
+function updateConversationList() {
+    const conversationListElement = document.getElementById('conversation-list');
+    const conversationList = JSON.parse(localStorage.getItem('chatHistory')) || [];
+
+    conversationListElement.innerHTML = '';
+    for (const [index, conversation] of conversationList.entries()) {
+        const conversationElement = document.createElement('div');
+        conversationElement.classList.add('conversation-item');
+        conversationElement.textContent = conversation.title || `Conversa ${index + 1}`;
         conversationElement.addEventListener('click', () => {
             localStorage.setItem('currentChat', JSON.stringify(conversation.messages));
             loadChatHistory();
